@@ -3,6 +3,8 @@ package pl.wolftech.restmock
 import io.appflate.restmock.RESTMockServer
 import io.appflate.restmock.utils.RequestMatchers.pathEndsWith
 import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -14,6 +16,7 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 
 
@@ -31,7 +34,7 @@ open class RestMockUnitTest {
     fun setup() {
         activity = Robolectric.setupActivity(MainActivity::class.java)
         RESTMockServer.reset()
-        val retrofit = Retrofit.Builder()
+        retrofit = Retrofit.Builder()
                 .baseUrl(RESTMockServer.getUrl())
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
@@ -46,16 +49,17 @@ open class RestMockUnitTest {
 
         retrofit.create(LoginVideostarRetrofitSpecificationApiCall::class.java)
                 .performLogin("mateusz", "password", 1, "netvi")
-/*                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())*/
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    result ->
-                    Assert.assertEquals("ok", result.status)
+                    (status) ->
+                    Assert.assertEquals("ok", status)
                 }
     }
 
     private interface LoginVideostarRetrofitSpecificationApiCall {
 
+        @FormUrlEncoded
         @POST("/user/login")
         fun performLogin(@Field("login") login: String,
                          @Field("password") password: String,
